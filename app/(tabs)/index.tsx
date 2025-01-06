@@ -1,32 +1,37 @@
 import AddExpense from '@/components/AddExpense';
 import NavigationBar from '@/components/NavigationBar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function Index() {
+  const handleDismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
   return (
-    <View
-      style={{
-        flex: 1,
-        ...styles.container,
-      }}
-    >
+    <TouchableWithoutFeedback onPress={handleDismissKeyboard}>
       <View
         style={{
-          flex: 0.2,
+          flex: 1,
+          ...styles.container,
         }}
       >
-        <Text
+        <View
           style={{
-            ...styles.header,
+            flex: 0.2,
           }}
         >
-          Hello
-        </Text>
+          <Text
+            style={{
+              ...styles.header,
+            }}
+          >
+            Hello
+          </Text>
+        </View>
+        <AddExpense />
+        <NavigationBar />
       </View>
-      <AddExpense />
-      <NavigationBar />
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 

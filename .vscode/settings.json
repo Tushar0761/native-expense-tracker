@@ -1,0 +1,7 @@
+{
+  "editor.foldingImportsByDefault": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  }
+}
