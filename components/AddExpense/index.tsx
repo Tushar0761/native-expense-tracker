@@ -1,25 +1,31 @@
-import React, { useRef, useState } from 'react';
-import {
-  FlatList,
-  Keyboard,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
-import { Button, Card, Chip, Divider, Menu, TextInput } from 'react-native-paper';
+import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
+import { Keyboard, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+
+import { Button, Chip, Divider, Menu, TextInput } from 'react-native-paper';
 import { ExpenseItemArray } from './types';
 
-const AddExpense = () => {
+import DatePickerComponent from '../DatePicker';
+
+type AddExpenseComponentProps = {
+  expenseArray: ExpenseItemArray;
+  setExpenseArray: Dispatch<SetStateAction<ExpenseItemArray>>;
+};
+
+const AddExpense = ({ expenseArray, setExpenseArray }: AddExpenseComponentProps) => {
   const [mostAddedItems, setMostAddedItems] = useState<{ description: string; count: number }[]>(
     []
   );
+
   const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
   const [category, setCategory] = useState<string>('');
   const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
-  const [expenseArray, setExpenseArray] = useState<ExpenseItemArray>([]);
+
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [show, setShow] = useState<boolean>(false);
+
   const [error, setError] = useState<{
     amount: boolean;
     description: boolean;
@@ -27,7 +33,6 @@ const AddExpense = () => {
     amount: false,
     description: false,
   });
-  const [menuVisible, setMenuVisible] = useState(false);
 
   const descriptionRef = useRef<any>(null);
   const amountRef = useRef<any>(null);
@@ -77,6 +82,11 @@ const AddExpense = () => {
 
       addCategory();
     } else {
+      if (amount === '') {
+        amountRef.current.focus();
+      } else if (description === '') {
+        descriptionRef.current.focus();
+      }
       setError({
         amount: !amount,
         description: !description,
@@ -96,8 +106,17 @@ const AddExpense = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+        setShow(false);
+        setMenuVisible(false);
+      }}
+    >
       <View style={styles.container}>
+        <View>
+          <DatePickerComponent date={date} setDate={setDate} setShow={setShow} show={show} />
+        </View>
         <View style={styles.inputContainer}>
           <TextInput
             ref={amountRef}
@@ -134,6 +153,7 @@ const AddExpense = () => {
               },
             }}
           />
+
           <View style={styles.dropdownContainer}>
             <TextInput
               style={styles.dropdownInput}
@@ -148,14 +168,21 @@ const AddExpense = () => {
             {menuVisible && (
               <View style={styles.menu}>
                 {categories.map((item) => (
-                  <Menu.Item
-                    key={item.name}
-                    onPress={() => {
-                      setCategory(item.name);
-                      setMenuVisible(false);
-                    }}
-                    title={`${item.name} (${item.count})`}
-                  />
+                  <View>
+                    <Menu.Item
+                      key={item.name}
+                      titleStyle={{
+                        fontSize: 15,
+                        fontWeight: 'bold',
+                      }}
+                      onPress={() => {
+                        setCategory(item.name);
+                        setMenuVisible(false);
+                      }}
+                      title={`${item.name} (${item.count})`}
+                    />
+                    <Divider />
+                  </View>
                 ))}
                 <Divider />
                 <Menu.Item onPress={() => setMenuVisible(false)} title="Close" />
@@ -175,24 +202,6 @@ const AddExpense = () => {
         <Button style={styles.button} mode="contained" onPress={addExpenseHandler}>
           Add Expense
         </Button>
-        <FlatList
-          data={expenseArray.filter(
-            (item) =>
-              Number(item.day) === new Date().getDate() &&
-              Number(item.month) === new Date().getMonth() + 1
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Card style={styles.card}>
-              <Card.Title title={`₹${item.amount}`} subtitle={item.category} />
-              <Card.Content>
-                <Text>{item.description}</Text>
-                <Text>{`Date: ${item.day}/${item.month}`}</Text>
-              </Card.Content>
-            </Card>
-          )}
-          ListEmptyComponent={<Text style={styles.emptyText}>No expenses for today.</Text>}
-        />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -226,6 +235,7 @@ const styles = StyleSheet.create({
     top: 50,
     width: '100%',
     backgroundColor: 'white',
+    shadowColor: 'black',
     zIndex: 1000,
   },
   button: {
