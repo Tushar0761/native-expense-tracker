@@ -5,6 +5,7 @@ export type ExpenseItem = {
   category?: string | null;
   day: string;
   month: string;
+  expenseDate: Date;
 };
 
 export type ExpenseItemArray = ExpenseItem[];

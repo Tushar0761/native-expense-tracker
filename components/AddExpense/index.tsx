@@ -1,9 +1,10 @@
-import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Keyboard, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 
 import { Button, Chip, Divider, Menu, TextInput } from 'react-native-paper';
 import { ExpenseItemArray } from './types';
 
+import { getItemFromStorage, setItemToStorage } from '@/utils/utils';
 import DatePickerComponent from '../DatePicker';
 
 type AddExpenseComponentProps = {
@@ -51,35 +52,42 @@ const AddExpense = ({ expenseArray, setExpenseArray }: AddExpenseComponentProps)
       });
   };
 
+  const clearInputs = () => {
+    setDescription('');
+    setAmount('');
+    setCategory('');
+    setError({ amount: false, description: false });
+  };
+
+  const addMostAddedItems = () => {
+    const existingItem = mostAddedItems.find((item) => item.description === description);
+    if (existingItem) {
+      existingItem.count += 1;
+      setMostAddedItems([...mostAddedItems]);
+    } else {
+      setMostAddedItems((prev) => [...prev, { description, count: 1 }]);
+    }
+  };
+
   const addExpenseHandler = () => {
     if (amount && description) {
-      const date = new Date();
+      const currentDate = new Date();
 
       setExpenseArray((prev) => [
         {
           amount: Number(amount),
           description,
           category,
-          day: String(date.getDate()),
-          month: String(date.getMonth() + 1),
-          createdAt: date,
+          day: String(date!.getDate()),
+          month: String(date!.getMonth() + 1),
+          createdAt: currentDate,
+          expenseDate: date!,
         },
         ...prev,
       ]);
 
-      const existingItem = mostAddedItems.find((item) => item.description === description);
-      if (existingItem) {
-        existingItem.count += 1;
-        setMostAddedItems([...mostAddedItems]);
-      } else {
-        setMostAddedItems((prev) => [...prev, { description, count: 1 }]);
-      }
-
-      setDescription('');
-      setAmount('');
-      setCategory('');
-      setError({ amount: false, description: false });
-
+      clearInputs();
+      addMostAddedItems();
       addCategory();
     } else {
       if (amount === '') {
@@ -104,6 +112,25 @@ const AddExpense = ({ expenseArray, setExpenseArray }: AddExpenseComponentProps)
       setCategory(String(expense?.category ?? ''));
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getItemFromStorage('mostAddedItems');
+      if (data !== null) {
+        setMostAddedItems(JSON.parse(data!));
+      } else {
+        await setItemToStorage('mostAddedItems', JSON.stringify([]));
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const setStorage = async () => {
+      await setItemToStorage('mostAddedItems', JSON.stringify(mostAddedItems));
+    };
+    setStorage();
+  }, [mostAddedItems]);
 
   return (
     <TouchableWithoutFeedback

@@ -40,10 +40,21 @@ const DatePickerComponent = ({
           gap: 10,
         }}
       >
-        <Text style={styles.dateText}>
-          {' '}
-          {format(date!, 'dd MMM yyyy')} ({format(date!, 'E')})
-        </Text>
+        {show ? (
+          <View>
+            <DateTimePicker
+              textColor="black"
+              style={styles.datePicker}
+              value={date!}
+              mode="date"
+              onChange={onChange}
+            />
+          </View>
+        ) : (
+          <Text style={styles.dateText}>
+            {format(date!, 'dd MMM yyyy')} ({format(date!, 'E')})
+          </Text>
+        )}
         <View style={{ flex: 1, height: 'auto', width: 'auto' }}>
           {!show ? (
             <Button style={styles.selectButton} mode="contained" onPress={() => setShow(true)}>
@@ -56,18 +67,6 @@ const DatePickerComponent = ({
           )}
         </View>
       </View>
-      {show && (
-        <View>
-          <DateTimePicker
-            textColor="black"
-            style={styles.datePicker}
-            value={date!}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={onChange}
-          />
-        </View>
-      )}
       {show && (
         <ScrollView horizontal={true}>
           <View
